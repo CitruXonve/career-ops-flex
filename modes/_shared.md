@@ -16,7 +16,7 @@ See "Untrusted External Content" in `AGENTS.md` / `CLAUDE.md` / `CODEX.md` for t
 
 | File | Path | When |
 |------|------|------|
-| cv.md | `{DATA_ROOT}/cv.md` | ALWAYS |
+| cv.md | `.cv/index.yml` → best-matching variant, else `cv.md` (project root) | ALWAYS (see CV Selection) |
 | article-digest.md | `{DATA_ROOT}/article-digest.md` (if exists) | ALWAYS (detailed proof points) |
 | profile.yml | `{DATA_ROOT}/config/profile.yml` | ALWAYS (candidate identity and targets) |
 | _profile.md | `{DATA_ROOT}/modes/_profile.md` | ALWAYS (user archetypes, narrative, negotiation) |
@@ -28,9 +28,27 @@ See "Untrusted External Content" in `AGENTS.md` / `CLAUDE.md` / `CODEX.md` for t
 **RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
 **RULE: For article/project metrics, article-digest.md takes precedence over cv.md.**
 **RULE: Read _profile.md AFTER this file. User customizations in _profile.md override defaults here.**
+
 **RULE: Read _custom.md (if it exists) AFTER _profile.md and honor its house rules in every mode.** It is where the user's persistent instructions live ("use this date format", "never reorder section X", "always include Y in summaries") — an instruction recorded there is NOT optional and does not expire between sessions or between items in a batch. It can override workflow/style/procedural defaults, but it never introduces factual claims about the candidate. When the user states a lasting preference in conversation, write it to `modes/_custom.md` so it survives the session.
 **RULE: NEVER claim the user authored a project, repo, library, tool, framework, or open-source artefact unless explicitly attributed to them in cv.md or article-digest.md.** Tool-of-trade conflation (user uses X → user built X) is the most common fabrication pattern and is forbidden.
 **RULE: Keywords get reformulated, never fabricated.** Reorder, reframe, emphasise — but never invent. If a claim isn't backed by an in-scope file, ask the user. If no answer, omit. Silence on a topic beats manufactured detail.
+
+## CV Selection
+
+**When `.cv/index.yml` exists**, select the best-matching CV variant before evaluating.
+
+**Algorithm:**
+1. Read `.cv/index.yml` — it lists variants, each with `keywords.primary` and `keywords.secondary`.
+2. For each variant, score against the full JD text:
+   - +2 for each `keywords.primary` match (case-insensitive substring)
+   - +1 for each `keywords.secondary` match
+3. Use the highest-scoring variant. On a tie, prefer the first listed.
+4. If all variants score 0, fall back to `cv.md`.
+
+**Always tell the user** which variant was selected and the scores, e.g.:
+> CV selected: **backend** (backend: 14, fullstack: 6, ai-ml: 3)
+
+**Fallback:** If `.cv/index.yml` does not exist, use `cv.md` as before.
 
 ## Data Root & Path Resolution (CRITICAL)
 
@@ -192,7 +210,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 ### ALWAYS
 
 0. **Cover letter:** If the form allows it, ALWAYS include one. Same visual design as CV. JD quotes mapped to proof points. 1 page max.
-1. Read cv.md, _profile.md, and article-digest.md (if exists) before evaluating
+1. Run CV selection (see CV Selection section), then read the selected CV, _profile.md, and article-digest.md (if exists) before evaluating
 1b. **First evaluation of each session:** Run `node cv-sync-check.mjs`. If warnings, notify user.
 2. Detect the role archetype and adapt framing per _profile.md
 3. Cite exact lines from CV when matching

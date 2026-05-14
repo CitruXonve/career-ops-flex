@@ -19,6 +19,8 @@ data/parser-output/**
 !data/parser-output/**/.gitkeep
 reports/*.md
 !reports/.gitkeep
+.cv/*
+interview-prep/
 output/*
 !output/.gitkeep
 batch/logs/*
@@ -83,6 +85,10 @@ plugins.lock
 **/.env.local
 **/.env*.local
 **/*.tsbuildinfo
+
+# Flake.nix
+flake.nix
+.direnv/
 
 # Generated
 .resolved-prompt-*
