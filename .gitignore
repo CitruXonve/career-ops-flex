@@ -15,6 +15,9 @@ data/offers/*
 !data/offers/.gitkeep
 data/parser-output/**
 !data/parser-output/**/
+data/pdf-index.tsv
+data/portal-health.tsv
+data/scan-runs.tsv
 !data/parser-output/.gitkeep
 !data/parser-output/**/.gitkeep
 reports/*.md
