@@ -16,7 +16,7 @@ See "Untrusted External Content" in `AGENTS.md` / `CLAUDE.md` / `CODEX.md` for t
 
 | File | Path | When |
 |------|------|------|
-| cv.md | `.cv/index.yml` → best-matching variant, else `cv.md` (project root) | ALWAYS (see CV Selection) |
+| cv.md | `{DATA_ROOT}/cv.md` | ALWAYS |
 | article-digest.md | `{DATA_ROOT}/article-digest.md` (if exists) | ALWAYS (detailed proof points) |
 | profile.yml | `{DATA_ROOT}/config/profile.yml` | ALWAYS (candidate identity and targets) |
 | _profile.md | `{DATA_ROOT}/modes/_profile.md` | ALWAYS (user archetypes, narrative, negotiation) |
@@ -28,27 +28,9 @@ See "Untrusted External Content" in `AGENTS.md` / `CLAUDE.md` / `CODEX.md` for t
 **RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
 **RULE: For article/project metrics, article-digest.md takes precedence over cv.md.**
 **RULE: Read _profile.md AFTER this file. User customizations in _profile.md override defaults here.**
-
 **RULE: Read _custom.md (if it exists) AFTER _profile.md and honor its house rules in every mode.** It is where the user's persistent instructions live ("use this date format", "never reorder section X", "always include Y in summaries") — an instruction recorded there is NOT optional and does not expire between sessions or between items in a batch. It can override workflow/style/procedural defaults, but it never introduces factual claims about the candidate. When the user states a lasting preference in conversation, write it to `modes/_custom.md` so it survives the session.
 **RULE: NEVER claim the user authored a project, repo, library, tool, framework, or open-source artefact unless explicitly attributed to them in cv.md or article-digest.md.** Tool-of-trade conflation (user uses X → user built X) is the most common fabrication pattern and is forbidden.
 **RULE: Keywords get reformulated, never fabricated.** Reorder, reframe, emphasise — but never invent. If a claim isn't backed by an in-scope file, ask the user. If no answer, omit. Silence on a topic beats manufactured detail.
-
-## CV Selection
-
-**When `.cv/index.yml` exists**, select the best-matching CV variant before evaluating.
-
-**Algorithm:**
-1. Read `.cv/index.yml` — it lists variants, each with `keywords.primary` and `keywords.secondary`.
-2. For each variant, score against the full JD text:
-   - +2 for each `keywords.primary` match (case-insensitive substring)
-   - +1 for each `keywords.secondary` match
-3. Use the highest-scoring variant. On a tie, prefer the first listed.
-4. If all variants score 0, fall back to `cv.md`.
-
-**Always tell the user** which variant was selected and the scores, e.g.:
-> CV selected: **backend** (backend: 14, fullstack: 6, ai-ml: 3)
-
-**Fallback:** If `.cv/index.yml` does not exist, use `cv.md` as before.
 
 ## Data Root & Path Resolution (CRITICAL)
 
@@ -121,6 +103,8 @@ The evaluation scores five dimensions, integrated into one global score of 1-5. 
 ## Posting Legitimacy (Block G)
 
 Block G assesses whether a posting is likely a real, active opening. It does NOT affect the 1-5 global score -- it is a separate qualitative assessment.
+
+The same holds for Block B's **requirement Importance column**: it does NOT affect the 1-5 global score either -- it is a prioritization and interview-preparation surface. The CV-match dimension stays a holistic judgment, so reports written before and after that column remain comparable, and the 4.0 apply / don't-apply line keeps its meaning across the whole history folded by `analyze-patterns.mjs`, `stats.mjs`, `funnel-velocity.mjs` and `rank-pipeline.mjs`.
 
 **Three tiers:**
 - **High Confidence** -- Real, active opening (most signals positive)
@@ -210,7 +194,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 ### ALWAYS
 
 0. **Cover letter:** If the form allows it, ALWAYS include one. Same visual design as CV. JD quotes mapped to proof points. 1 page max.
-1. Run CV selection (see CV Selection section), then read the selected CV, _profile.md, and article-digest.md (if exists) before evaluating
+1. Read cv.md, _profile.md, and article-digest.md (if exists) before evaluating
 1b. **First evaluation of each session:** Run `node cv-sync-check.mjs`. If warnings, notify user.
 2. Detect the role archetype and adapt framing per _profile.md
 3. Cite exact lines from CV when matching
@@ -220,7 +204,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 7. Be direct and actionable -- no fluff
 8. Native tech English for generated text. Short sentences, action verbs, no passive voice.
 8b. Case study URLs in PDF Professional Summary (recruiter may only read this).
-9. **Tracker additions as TSV** -- NEVER edit applications.md directly. Write TSV in `batch/tracker-additions/`.
+9. **Tracker additions as TSV** -- NEVER edit applications.md directly. Write TSV in `batch/tracker-additions/`: a header row of column labels, then one data row (see AGENTS.md, "TSV Format for Tracker Additions"). The header is what lets `merge-tracker.mjs` resolve fields by name instead of guessing which column is score and which is status.
 10. **Include `**URL:**` in every report header.**
 
 ### Tools
