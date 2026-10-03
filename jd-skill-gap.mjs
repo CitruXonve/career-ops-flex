@@ -39,11 +39,10 @@ import { getCareerOpsRoot } from './path-resolver.mjs';
 // .career-ops-data marker points; a bare relative path resolves against
 // whatever directory the process was started in.
 //
-// Everything this script reports is a comparison against that file, so without
-// it there is nothing to say at all. The error below therefore has to serve two
-// different users at once: one who never wrote a cv.md, and one who has one
-// sitting outside the data root this resolver just looked in. Naming only one
-// of them sends the other to the wrong fix.
+// The error below already says "this is a user-layer file, create it first" —
+// advice that sends a user who HAS one to create a second copy in the wrong
+// place. Everything this script reports is a comparison against that file, so
+// without it there is nothing to say at all.
 const CV_PATH = join(getCareerOpsRoot(), 'cv.md');
 
 // ── JD skill extraction (regex, no LLM) ─────────────────────────────
@@ -836,8 +835,7 @@ if (selfTestMode) {
     process.exit(1);
   }
   if (!existsSync(CV_PATH)) {
-    console.error(`Error: cv.md not found at ${CV_PATH}`);
-    console.error('Create it there, or point CAREER_OPS_ROOT / CAREER_OPS_DATA_DIR (or a .career-ops-data marker) at the directory that already has it.');
+    console.error(`Error: ${CV_PATH} not found — this is a user-layer file, create it first.`);
     process.exit(1);
   }
 
