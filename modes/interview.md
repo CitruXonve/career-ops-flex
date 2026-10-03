@@ -30,7 +30,11 @@ Ask the user about their immediate goals:
 - What specific roles are they targeting?
 - What are their target salary and total compensation expectations?
 - What are their location preferences (remote, hybrid, on-site, geographic limits)?
-- Update `config/profile.yml` with the target role titles, locations, and salary bounds.
+- Are you a non-citizen and subject to certain limit to take a job (e.g. a new U.S. H-1B petition)? If so, offer a **fast-skip rule** that stops before the full evaluation and files a short SKIP report instead, and ask separately for each trigger whether it should fast-skip (one question at a time):
+  - an explicit **no-sponsorship** statement
+  - a **U.S. security clearance** requirement
+  - an **export-control "U.S. persons only"** clause (ITAR/EAR)
+- Update `config/profile.yml` with the target role titles, locations, salary bounds, and work authorization (`location.visa_status`, `location.authorized_in`, `location.needs_sponsorship`).
 
 ### Step 2: Experience & Core Achievements
 
@@ -59,9 +63,11 @@ Once the interview is complete, or once enough new details have been collected:
 1. **Update `cv.md`**: Update the professional summary, rewrite project bullet points to incorporate the new keywords and metrics, and append new skills.
 2. **Update `config/profile.yml`**: Update the targets, compensation, and narrative sections.
 3. **Update `modes/_profile.md`**: Map the new projects/proof points to the target archetypes and update the adaptive framing rules.
-4. Run `node doctor.mjs` silently to verify project integrity.
-5. Provide a summary of the files updated:
+4. **Update `modes/_custom.md`** (only if the user picked at least one fast-skip trigger in Step 1): uncomment the "Work-authorization fast-skip" example block, keep only the trigger bullets they chose, and fill its `{placeholders}` from the user's own words only; delete optional lines they didn't supply. Otherwise leave it commented out.
+5. Run `node doctor.mjs` silently to verify project integrity.
+6. Provide a summary of the files updated:
    > "✅ Interactive interview completed! Updated your profile:
    > - **CV**: Refined summaries and project bullets with new metrics.
    > - **Profile config**: Updated target roles and comp expectations.
-   > - **Custom framing**: Integrated project mappings into _profile.md."
+   > - **Custom framing**: Integrated project mappings into _profile.md.
+   > - **Work-auth**: Fast-skip on {chosen triggers} / not needed."

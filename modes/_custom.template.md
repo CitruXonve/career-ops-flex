@@ -32,10 +32,11 @@
 
 <!-- Worked example -- a work-authorization pre-screen. Uncomment and
      adapt it if you need visa sponsorship; delete it otherwise.
+     Onboarding offers to enable this when `needs_sponsorship: true`.
 
 ### Work-authorization fast-skip (eligibility pre-screen)
 
-Before running a full A–G evaluation on any JD, first scan the posting for a hard eligibility blocker that my work-authorization situation ({your status / what you need from an employer}) cannot clear. Treat any of these as a fast-skip trigger:
+Before running a full A–G evaluation on any JD, first scan the posting for a hard eligibility blocker that my work-authorization situation ({your status / what you need from an employer}) cannot clear. Treat any of these as a fast-skip trigger (each is optional — keep only the ones you want):
 
 - A **U.S. security clearance** requirement (e.g. "eligible to obtain and maintain a Secret/Top Secret clearance") — these generally require U.S. citizenship.
 - An **explicit no-sponsorship** statement (e.g. "we will not sponsor", "not able to consider candidates who require visa sponsorship now or in the future", "must have permanent work authorization").

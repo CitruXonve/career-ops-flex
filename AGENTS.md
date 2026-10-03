@@ -201,6 +201,10 @@ If `config/profile.yml` is missing, copy from `config/profile.example.yml` and a
 > - Your location and timezone
 > - What roles are you targeting? (e.g., 'Senior Backend Engineer', 'AI Product Manager')
 > - Your salary target range
+> - Are you a non-citizen and subject to certain limit to take a job (e.g. a new U.S. H-1B petition)? A **fast-skip rule** stops before the full evaluation on postings that rule you out and files a short SKIP report instead. Which of these should fast-skip (any, all, or none)?
+>   - an explicit **no-sponsorship** statement ("we will not sponsor", "must have permanent work authorization")
+>   - a **U.S. security clearance** requirement (Secret/Top Secret — generally citizenship-gated)
+>   - an **export-control "U.S. persons only"** clause (ITAR/EAR — citizen, permanent resident, asylee or refugee only)
 > - How much do you want to spend on model usage per evaluation? Three options:
 >   - **economy** — cheapest and fastest, good for scanning lots of offers quickly
 >   - **standard** — balanced cost and quality (default if you're not sure)
@@ -209,6 +213,8 @@ If `config/profile.yml` is missing, copy from `config/profile.example.yml` and a
 > I'll set everything up for you."
 
 Fill in `config/profile.yml` (including `spend_tier`, default `standard`). Archetypes and targeting narrative go to `modes/_profile.md` or `config/profile.yml` — never `modes/_shared.md`.
+
+**Work-authorization checkpoint.** Always set `location.visa_status`, `location.authorized_in` and `location.needs_sponsorship` from the user's answer. Treat the three triggers as separate yes/no choices — never enable one the user didn't pick. If they pick at least one, open `modes/_custom.md` (doctor auto-copies it), uncomment the "Work-authorization fast-skip" example block, keep only the trigger bullets they chose, and fill its `{placeholders}` from the user's own words only: their status and what they need from an employer, and how to treat a generic "must be authorized to work" line (default: flag it as an open question). Keep the optional targeting/wording lines only if the user supplies them, and the "document requests" sub-rule only if they want it; delete the rest. If they pick none, leave the block commented out. Ask once and don't bring it up again after a "no".
 
 #### Step 3: Portals (recommended)
 If `portals.yml` is missing:
