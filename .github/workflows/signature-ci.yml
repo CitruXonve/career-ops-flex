@@ -55,7 +55,7 @@ jobs:
             // el contenido se trata SOLO como frase opcional (el bot sanitiza y reescribe
             // la línea canónica desde metadatos — nadie imputa identidad por contenido).
             console.log("shape OK");
-          ' 2> /tmp/reason.txt || { echo "reason=$(cat /tmp/reason.txt)" >> "$GITHUB_OUTPUT"; exit 1; }
+          ' 2> /tmp/reason.txt || { cat /tmp/reason.txt >> "$GITHUB_OUTPUT"; exit 1; }
       - name: Friendly ack (valid)
         if: success()
         # Fork PRs carry a read-only token, so this comment can fail with
