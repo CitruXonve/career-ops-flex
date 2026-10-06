@@ -16,7 +16,7 @@ See "Untrusted External Content" in `AGENTS.md` / `CLAUDE.md` / `CODEX.md` for t
 
 | File | Path | When |
 |------|------|------|
-| cv.md | `.cv/index.yml` → best-matching variant, else `cv.md` (project root) | ALWAYS (see CV Selection) |
+| cv.md | `{DATA_ROOT}/cv.md` | ALWAYS |
 | article-digest.md | `{DATA_ROOT}/article-digest.md` (if exists) | ALWAYS (detailed proof points) |
 | profile.yml | `{DATA_ROOT}/config/profile.yml` | ALWAYS (candidate identity and targets) |
 | _profile.md | `{DATA_ROOT}/modes/_profile.md` | ALWAYS (user archetypes, narrative, negotiation) |
@@ -28,27 +28,9 @@ See "Untrusted External Content" in `AGENTS.md` / `CLAUDE.md` / `CODEX.md` for t
 **RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
 **RULE: For article/project metrics, article-digest.md takes precedence over cv.md.**
 **RULE: Read _profile.md AFTER this file. User customizations in _profile.md override defaults here.**
-
 **RULE: Read _custom.md (if it exists) AFTER _profile.md and honor its house rules in every mode.** It is where the user's persistent instructions live ("use this date format", "never reorder section X", "always include Y in summaries") — an instruction recorded there is NOT optional and does not expire between sessions or between items in a batch. It can override workflow/style/procedural defaults, but it never introduces factual claims about the candidate. When the user states a lasting preference in conversation, write it to `modes/_custom.md` so it survives the session.
 **RULE: NEVER claim the user authored a project, repo, library, tool, framework, or open-source artefact unless explicitly attributed to them in cv.md or article-digest.md.** Tool-of-trade conflation (user uses X → user built X) is the most common fabrication pattern and is forbidden.
 **RULE: Keywords get reformulated, never fabricated.** Reorder, reframe, emphasise — but never invent. If a claim isn't backed by an in-scope file, ask the user. If no answer, omit. Silence on a topic beats manufactured detail.
-
-## CV Selection
-
-**When `.cv/index.yml` exists**, select the best-matching CV variant before evaluating.
-
-**Algorithm:**
-1. Read `.cv/index.yml` — it lists variants, each with `keywords.primary` and `keywords.secondary`.
-2. For each variant, score against the full JD text:
-   - +2 for each `keywords.primary` match (case-insensitive substring)
-   - +1 for each `keywords.secondary` match
-3. Use the highest-scoring variant. On a tie, prefer the first listed.
-4. If all variants score 0, fall back to `cv.md`.
-
-**Always tell the user** which variant was selected and the scores, e.g.:
-> CV selected: **backend** (backend: 14, fullstack: 6, ai-ml: 3)
-
-**Fallback:** If `.cv/index.yml` does not exist, use `cv.md` as before.
 
 ## Data Root & Path Resolution (CRITICAL)
 
@@ -119,6 +101,7 @@ Decide the Global Score once from these dimensions, applying any user-specific S
 5. **If evidence contradicts the `require` criteria** → **cap this dimension at 2/5**, and add an explicit line to Block A's Culture Screen field (see `oferta.md`) naming what's missing or contradicted. Do not let a strong CV-match score silently compensate for this — surface it, don't bury it.
 6. **If no evidence exists for any `require` criterion** → score 3 by default, unless `culture_screen.deprioritize_if_absent: true` is set, in which case **cap this dimension at 2/5**.
 7. A role scoring 4.5+ overall but 2 or below on Cultural signals must carry an explicit warning in the report: "High technical fit, unconfirmed/poor culture fit — verify before applying."
+8. If `modes/oferta.md`'s Block A "PcD-quota check" fired a match (🟢 PcD-Quota flag line present), treat it as a positive contributor to this dimension, worth at most +1 — a legally mandated quota opening is a genuine hiring-process advantage. It never overrides a `culture_screen` contradiction (rule 5 above still caps the dimension at 2/5 if evidence contradicts required criteria); it only adds weight when the dimension isn't otherwise capped.
 
 ## Posting Legitimacy (Block G)
 
@@ -214,7 +197,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 ### ALWAYS
 
 0. **Cover letter:** If the form allows it, ALWAYS include one. Same visual design as CV. JD quotes mapped to proof points. 1 page max.
-1. Run CV selection (see CV Selection section), then read the selected CV, _profile.md, and article-digest.md (if exists) before evaluating
+1. Read cv.md, _profile.md, and article-digest.md (if exists) before evaluating
 1b. **First evaluation of each session:** Run `node cv-sync-check.mjs`. If warnings, notify user.
 2. Detect the role archetype and adapt framing per _profile.md
 3. Cite exact lines from CV when matching
@@ -233,7 +216,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 |------|-----|
 | WebSearch | Comp research, trends, company culture, LinkedIn contacts, fallback for JDs |
 | WebFetch | Fallback for extracting JDs from static pages |
-| Playwright | Verify offers (browser_navigate + browser_snapshot). **NEVER 2+ agents with Playwright in parallel.** |
+| Playwright | Verify offers (browser_navigate + browser_snapshot). **NEVER let 2+ agents drive the same Playwright/MCP browser session concurrently.** This is a per-session rule, not a per-agent-count one: agents each holding their own isolated browser session are fine in parallel; agents sharing one interactive MCP browser session are not — they race for control and can silently read or act on each other's page state. |
 | Read | cv.md, _profile.md, article-digest.md, cv-template.html |
 | Write | Temporary HTML for PDF, applications.md, reports .md |
 | Edit | Update tracker |
@@ -245,6 +228,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 A mode may tell you to run work in a background subagent (e.g. `scan`, or parallel `pipeline` URLs) to spare the main agent's context. Any subagent you spawn for career-ops is a **single-pass worker**:
 
 - It MUST NOT spawn further subagents, and MUST NOT invoke other skills — especially open-ended or recursive research skills (e.g. a `deep-research` skill). Those fan out into nested agents and can burn tens of millions of tokens on one run.
+- If the work involves Playwright (e.g. parallel `pipeline` workers each verifying a posting), the Playwright rule above still applies in full: parallel subagents must never share one interactive Playwright/MCP browser session. Each worker needs its own isolated session, or the Playwright-touching step must run sequentially.
 - Company, role, and compensation research is ALWAYS done **inline**, with the small explicit set of WebSearch/WebFetch queries the mode names (e.g. `oferta` Blocks C/D) — never delegated to a recursive research harness.
 - One `/career-ops <JD>` evaluates one role; it must never explode into a self-replicating swarm of agents. If you are about to delegate research or nest agents, stop and do it inline, bounded.
 
