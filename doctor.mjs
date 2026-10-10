@@ -12,6 +12,7 @@ import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import * as yaml from 'js-yaml';
 import dotenv from 'dotenv';
+import { findTitleFilterConflicts } from './lib/title-filter-conflicts.mjs';
 import { discoverPlugins, pluginRoots, pluginStatus } from './plugins/_engine.mjs';
 import { getCareerOpsRoot } from './path-resolver.mjs';
 import { validateProfile, EXAMPLE_PATH } from './validate-profile.mjs';
@@ -779,6 +780,7 @@ async function main() {
     checkFonts(),
     checkPersonalization(projectRoot),
     checkProfileShape(projectRoot),
+    checkTitleFilterConflicts(projectRoot),
     checkCvShape(projectRoot),
     checkAutoDir('data'),
     checkPipelineFile(),
@@ -912,6 +914,41 @@ function checkPersonalization(root) {
 // prerequisites that AGENTS.md "First Run" lists. `--json` turns the trigger into
 // a deterministic mechanism the agent runs (instead of re-deriving it from prose),
 // and `--target <dir>` lets the test suite point it at a simulated virgin env.
+function titleFilterConflicts(root) {
+  // Same override the scanner honours (scan.mjs PORTALS_PATH), so a diagnosis
+  // describes the file a scan would actually read, not the default one.
+  const portalsPath = process.env.CAREER_OPS_PORTALS || join(root, 'portals.yml');
+  if (!existsSync(portalsPath)) return null;
+  let config;
+  try {
+    config = yaml.load(readFileSync(portalsPath, 'utf-8'));
+  } catch {
+    // A portals.yml that does not parse is a different check's problem; this
+    // one only has something to say about a file it could actually read.
+    return null;
+  }
+  const { conflicts } = findTitleFilterConflicts(config?.title_filter);
+  return conflicts.length > 0 ? conflicts : null;
+}
+
+// `main()` feeds the ordinary human-readable run; onboardingState() feeds
+// `--json`. Both need this check, and it is non-blocking in both: a positive
+// its own negatives veto is a configuration smell to fix, not a reason to
+// refuse to start, so it reports as a warning rather than a failure.
+function checkTitleFilterConflicts(root) {
+  const conflicts = titleFilterConflicts(root);
+  if (!conflicts) return { label: 'title_filter positives all reachable', pass: true };
+  const n = conflicts.length;
+  return {
+    label: `title_filter: ${n} positive${n === 1 ? '' : 's'} never keeps a title`,
+    warn: true,
+    fix: conflicts.flatMap((c) => [
+      `"${c.positive}" stands for "${c.title}", which negative "${c.negative}" vetoes`,
+      '  ask your agent: "which title_filter entries contradict each other?"',
+    ]),
+  };
+}
+
 function onboardingState(root) {
   const autoCopied = [];
   const templates = [
@@ -946,6 +983,7 @@ function onboardingState(root) {
   // user-data layer and may point elsewhere under split-checkout installs.
   const mcpCheck = checkPlaywrightMcp(process.cwd(), activeCli);
   const unpersonalized = unpersonalizedFiles(root);
+  const titleFilterIssues = titleFilterConflicts(root);
   // Every other check in this function is data-layer and correctly uses this
   // function's own `root` parameter. The tracked-.bak check is the one
   // code-layer exception (#3867 finding 6) — it must read the module-level
@@ -985,6 +1023,8 @@ function onboardingState(root) {
     // to be visible — surfaced as its own field the agent can branch on rather
     // than a string it has to pattern-match out of `warnings`.
     unpersonalized,
+    // Present only when it fired: a coherent title_filter adds no key.
+    ...(titleFilterIssues ? { titleFilterConflicts: titleFilterIssues } : {}),
     warnings,
     autoCopied,
     plugins,

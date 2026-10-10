@@ -293,6 +293,9 @@ const SYSTEM_PATHS = [
   'story-provenance-check.mjs',
   'lib/latex-content.mjs',
   'lib/context-budget.mjs',
+  // Ships alongside doctor.mjs, which imports it: an upgraded install whose
+  // updater had no entry for it would check out a doctor that cannot load.
+  'lib/title-filter-conflicts.mjs',
   // Retired 2026-09-05: the suite moved to tests/context-budget.test.mjs. The
   // entry stays so staleSystemFiles() prunes the orphan on an upgraded install;
   // drop it once a release has shipped past that move.
