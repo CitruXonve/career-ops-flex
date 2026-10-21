@@ -73,7 +73,6 @@ try {
   } else {
     fail('resolveProfileKeywords should return [] for unparseable YAML');
   }
-  rmSync(tmp, { recursive: true, force: true });
 } catch (e) {
   fail(`_profile-keywords tests crashed: ${e.message}`);
 } finally {
